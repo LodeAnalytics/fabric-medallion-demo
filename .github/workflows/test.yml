@@ -1,0 +1,38 @@
+name: test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  pipeline:
+    name: Run notebooks on Spark 3.5 + Delta 3.2
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get the demo data generator
+        uses: actions/checkout@v4
+        with:
+          repository: lodeanalytics/demo-data-generator
+          path: demo-data-generator
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install
+        run: pip install pyspark==3.5.3 delta-spark==3.2.1 nbformat
+
+      - name: Run pipeline tests
+        env:
+          USE_DELTA: "1"
+          GENERATOR: demo-data-generator/generate_data.py
+        run: python tests/run_local.py
